@@ -1,5 +1,4 @@
 import os
-import shutil
 
 source_folder = 'C:/Users/rorya/Downloads/Oil_Fund_Data/'
 
