@@ -1,11 +1,11 @@
 import os
+import shutil
 
-target_folder = r'C:\Users\rorya\Desktop\Portfolio\Projects\NorwegianOilFund\data'
+source_folder = 'C:/Users/rorya/Downloads/Oil_Fund_Data/'
 
-source_folder = r'C:\Users\rorya\Downloads\Oil_Fund_Data'
+target_folder = 'C:/Users/rorya/Desktop/Portfolio/Projects/NorwegianOilFund/data/'
 
-for path, dir, files in os.walk(source_folder):
-    if files:
-        for file in files:
-            if not os.path.isfile(target_folder + file):
-                os.rename(path + '\\' + file, target_folder + file)
+all_files = os.listdir(source_folder)
+
+for file in all_files:
+    os.rename(source_folder + file, target_folder + file)
