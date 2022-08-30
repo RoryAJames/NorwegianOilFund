@@ -14,15 +14,18 @@ for f in all_filenames:
     df = pd.read_csv(f)
     df['file_identifier'] = [f] * len(df.index)
     
-    #Create investment category column
+    #Create investment category column by extracting first two characters from file identifier
     df['Category'] = df['file_identifier'].apply(lambda x: 'Equity' if x[:2] == 'EQ' else 'Fixed Income')
     
     #Create year column
+    df['Year'] = df['file_identifier'].str[3:7].astype(int)
     
     dfs_to_concat.append(df)
     
 combined_csv = pd.concat(dfs_to_concat)
 
 print(combined_csv.head())
+
+#Remove unwanted columns
 
 #combined_csv.to_csv("combined.csv", index=False)
