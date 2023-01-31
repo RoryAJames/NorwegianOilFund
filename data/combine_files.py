@@ -13,7 +13,7 @@ dfs_to_concat = []
 
 for f in all_filenames:
     df = pd.read_csv(f)
-    df['file_identifier'] = [f] * len(df.index)
+    df['file_identifier'] = [f] * len(df.index) #Creates a file identifier for each csv file
     
     #Create investment category column by extracting the first two characters from file identifier
     df['Category'] = df['file_identifier'].apply(lambda x: 'Equity' if x[:2] == 'EQ' else 'Fixed Income')
