@@ -62,6 +62,10 @@ combined_csv['Industry'] = np.where((combined_csv['Industry'] == 'Unknown') & (c
                            np.where((combined_csv['Industry'] == 'Unknown') & (combined_csv['Name'] == 'Kontron S&T AG'), 'Technology',
                                     combined_csv['Industry']))
 
+#Convert market value into an integer
+
+combined_csv['Value'] = combined_csv['Value'].fillna(0).str.replace(',', '').astype('Int64')
+
 #Create a CSV output of the combined data files
 
 combined_csv.to_csv("data.csv", index=False)
