@@ -36,8 +36,8 @@ combined_csv.drop(columns=cols_to_drop, inplace=True)
 new_col = {'Market Value(USD)':'Value'}
 combined_csv.rename(columns= new_col, inplace = True)
 
-#Create a CSV output of the master 
+#Create a CSV output of the combined data files
 
-combined_csv.to_csv("combined.csv", index=False)
+combined_csv.to_csv("data.csv", index=False)
 
 #print(combined_csv.head())
