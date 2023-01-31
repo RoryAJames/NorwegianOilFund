@@ -36,6 +36,8 @@ combined_csv.drop(columns=cols_to_drop, inplace=True)
 new_col = {'Market Value(USD)':'Value'}
 combined_csv.rename(columns= new_col, inplace = True)
 
+#Change New Zealand in region to Oceania
+
 #Create a CSV output of the combined data files
 
 combined_csv.to_csv("data.csv", index=False)
