@@ -12,7 +12,8 @@ all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
 dfs_to_concat = []
 
 for f in all_filenames:
-    df = pd.read_csv(f)
+    df = pd.read_csv(f, thousands=r',') #Removes thousands separator when reading in CSV file. This ensures the values are integers
+    
     df['file_identifier'] = [f] * len(df.index) #Creates a file identifier for each csv file
     
     #Create investment category column by extracting the first two characters from file identifier
@@ -61,10 +62,6 @@ combined_csv['Industry'] = combined_csv['Industry'].replace({'Guernsey':'Financi
 combined_csv['Industry'] = np.where((combined_csv['Industry'] == 'Unknown') & (combined_csv['Name'] == 'Craft Oil Ltd'), 'Energy',
                            np.where((combined_csv['Industry'] == 'Unknown') & (combined_csv['Name'] == 'Kontron S&T AG'), 'Technology',
                                     combined_csv['Industry']))
-
-#Convert market value into an integer
-
-combined_csv['Value'] = combined_csv['Value'].fillna(0).str.replace(',', '').astype('Int64')
 
 #Create a CSV output of the combined data files
 
