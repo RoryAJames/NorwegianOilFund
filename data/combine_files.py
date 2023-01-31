@@ -1,6 +1,7 @@
 import os
 import glob
 import pandas as pd
+import numpy as np
 
 os.chdir('C:/Users/rorya/Desktop/Portfolio/Projects/NorwegianOilFund/data/')
 
@@ -36,7 +37,30 @@ combined_csv.drop(columns=cols_to_drop, inplace=True)
 new_col = {'Market Value(USD)':'Value'}
 combined_csv.rename(columns= new_col, inplace = True)
 
-#Change New Zealand in region to Oceania
+#Assign countries to their appropriate regions 
+
+combined_csv['Region'] = combined_csv['Region'].replace({'Australia':'Oceania',
+                                                         'New Zealand':'Oceania',
+                                                         'Japan':'Asia'})
+
+#Fix spelling of various countries
+
+combined_csv['Country'] = combined_csv['Country'].replace({'Faeroe Islands':'Faroe Islands',
+                                                           'Guernsey C. I.':'Guernsey',
+                                                           'Gurensey':'Guernsey',
+                                                           'Jersey C.I.':'Jersey',
+                                                           'Lichtenstein':'Liechtenstein',
+                                                           'Tanzania *, United Republic of':'Tanzania'})
+
+# Fix Guernsey in industry
+
+combined_csv['Industry'] = combined_csv['Industry'].replace({'Guernsey':'Financials'})
+
+# Fix unknown in industry, assign the values based on company name
+
+combined_csv['Industry'] = np.where((combined_csv['Industry'] == 'Unknown') & (combined_csv['Name'] == 'Craft Oil Ltd'), 'Energy',
+                           np.where((combined_csv['Industry'] == 'Unknown') & (combined_csv['Name'] == 'Kontron S&T AG'), 'Technology',
+                                    combined_csv['Industry']))
 
 #Create a CSV output of the combined data files
 
