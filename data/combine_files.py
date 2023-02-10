@@ -35,7 +35,7 @@ combined_csv.drop(columns=cols_to_drop, inplace=True)
 
 #Rename market value column to 'Value'
 
-new_col = {'Market Value(USD)':'Value'}
+new_col = {'Market Value(USD)':'Market_Value'}
 combined_csv.rename(columns= new_col, inplace = True)
 
 #Assign countries to their appropriate regions 
