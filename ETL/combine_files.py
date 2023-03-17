@@ -3,6 +3,8 @@ import glob
 import pandas as pd
 import numpy as np
 
+##EXTRACT
+
 os.chdir('C:/Users/rorya/Desktop/Portfolio/Projects/NorwegianOilFund/data/')
 
 extension = 'csv'
@@ -26,6 +28,8 @@ for f in all_filenames:
  
 # Concat dataframes together to create the master
 combined_csv = pd.concat(dfs_to_concat)
+
+##TRANSFORM
 
 #Remove unwanted columns
 
