@@ -82,12 +82,42 @@ def transform_data():
     df['Industry'] = df['Industry'].replace({'Consumer Services':'Consumer Discretionary',
                                              'Consumer Goods':'Consumer Staples'})
     
-    #Assign all of the corporate bond options to corporate bonds
+    #Assign oil and gas to energy
+    
+    df['Industry'] = df['Industry'].replace({'Oil & Gas':'Energy'})
+    
+    #Create a list of all the unique real estate companies
+    
+    real_estate_companies = df['Name'].loc[df['Industry']== 'Real Estate'].unique().tolist()
+    
+    #If a company name is in the real estate list change the industry to real estate
+    
+    df['Industry'] = np.where((df['Name'].isin(real_estate_companies)),'Real Estate',df['Industry'])
+    
+    #If a company is in real estate and fixed income change the industry to corporate bonds
+    
+    df['Industry'] = np.where((df['Industry'] == 'Real Estate') & (df['Category'] == 'Fixed Income'), 'Corporate Bonds',df['Industry'])
+    
+    #Amalgamate corporate bonds
     
     df['Industry'] = df['Industry'].replace({'Corporate':'Corporate Bonds',
                                              'Corporate Bonds/Securitized Bonds':'Corporate Bonds',
                                              'Corporate/Securitized':'Corporate Bonds',
                                              'Convertible Bonds':'Corporate Bonds'})
+    
+    #Amalgamate treasuries
+    
+    df['Industry'] = df['Industry'].replace({'Treasuries/Index Linked Bonds':'Treasuries',
+                                             'Treasuries/Index Linked Bonds/Government Related Bonds':'Treasuries',
+                                             'Treasuries/Government Related Bonds':'Treasuries'})
+    
+    #Create a list of all the treasuries
+    
+    list_of_treasuries = df['Name'].loc[df['Industry']== 'Treasuries'].unique().tolist()
+    
+    #If a company name is in the list of treasuries change the industry to treasuries
+    
+    df['Industry'] = np.where((df['Name'].isin(list_of_treasuries)),'Treasuries',df['Industry'])
     
     #Amalgamate Securitized and Securitized Bonds together
     
