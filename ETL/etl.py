@@ -86,11 +86,11 @@ def transform_data():
     
     df['Industry'] = df['Industry'].replace({'Oil & Gas':'Energy'})
     
-    #Create a list of all the unique real estate companies
+    #Create a list of all the unique real estate companies.
     
     real_estate_companies = df['Name'].loc[df['Industry']== 'Real Estate'].unique().tolist()
     
-    #If a company name is in the real estate list change the industry to real estate
+    # Up until 2020 real estate companies were categorized as financials. If a company name is in the real estate list change the industry to real estate.
     
     df['Industry'] = np.where((df['Name'].isin(real_estate_companies)),'Real Estate',df['Industry'])
     
