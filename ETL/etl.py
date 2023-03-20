@@ -98,6 +98,10 @@ def transform_data():
     
     df['Industry'] = np.where((df['Industry'] == 'Real Estate') & (df['Category'] == 'Fixed Income'), 'Corporate Bonds',df['Industry'])
     
+    #Amalgamate Securitized and Securitized Bonds
+    
+    df['Industry'] = df['Industry'].replace({'Securitized':'Securitized Bonds'})
+    
     #Amalgamate corporate bonds
     
     df['Industry'] = df['Industry'].replace({'Corporate':'Corporate Bonds',
@@ -115,13 +119,11 @@ def transform_data():
     
     list_of_treasuries = df['Name'].loc[df['Industry']== 'Treasuries'].unique().tolist()
     
-    #If a company name is in the list of treasuries change the industry to treasuries
+    #If a bond name is in the list of treasuries then change the industry to treasuries
     
     df['Industry'] = np.where((df['Name'].isin(list_of_treasuries)),'Treasuries',df['Industry'])
     
-    #Amalgamate Securitized and Securitized Bonds together
-    
-    df['Industry'] = df['Industry'].replace({'Securitized':'Securitized Bonds'})
+    #Amalgamate government bonds together
     
     return df
 
