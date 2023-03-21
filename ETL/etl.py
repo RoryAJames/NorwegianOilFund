@@ -3,10 +3,12 @@ import glob
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from prefect import task, flow
 
 '''A function that extracts all of the csv files from the data folder, creates a unique identifier for each CSV file, extracts the investment category and year, 
  and then combines the files together into one dataframe'''  
 
+#@task
 def extract_data():
     
     os.chdir('C:/Users/rorya/Desktop/Portfolio/Projects/NorwegianOilFund/data/')
@@ -37,6 +39,7 @@ def extract_data():
 
 #A function that performs all of the data cleaning tasks before loading into the database.
 
+#@task
 def transform_data():
 
     df = extract_data()
@@ -125,7 +128,17 @@ def transform_data():
     
     #Amalgamate government bonds together
     
+    df['Industry'] = df['Industry'].replace({'Government':'Government Bonds',
+                                             'Government Related':'Government Bonds',
+                                             'Government Related Bonds':'Government Bonds',
+                                             'Government Related Bonds/Corporate Bonds':'Government Bonds',
+                                             'Government Related Bonds/Securitized Bonds':'Government Bonds'})
+    
     return df
+
+#@task
+def load_data():
+    pass
 
 #Load transformed data
 test = transform_data()
