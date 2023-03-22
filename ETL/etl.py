@@ -2,10 +2,8 @@ import os
 import glob
 import pandas as pd
 import numpy as np
-import psycopg2
 import streamlit as st
 from sqlalchemy import create_engine
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from pathlib import Path
 from prefect import task, flow
 
@@ -57,15 +55,19 @@ def transform_data(data):
     new_col = {'Market Value(USD)':'market_value'}
     data.rename(columns= new_col, inplace = True)
     
+    #Make all of the columns lowercase so that you can properly query the database in postgres
+    
+    data.columns = data.columns.str.lower()
+    
     #Assign countries to their appropriate regions 
 
-    data['Region'] = data['Region'].replace({'Australia':'Oceania',
+    data['region'] = data['region'].replace({'Australia':'Oceania',
                                          'New Zealand':'Oceania',
                                          'Japan':'Asia'})
     
     #Fix spelling of various countries
 
-    data['Country'] = data['Country'].replace({'Faeroe Islands':'Faroe Islands',
+    data['country'] = data['country'].replace({'Faeroe Islands':'Faroe Islands',
                                            'Guernsey C. I.':'Guernsey',
                                            'Gurensey':'Guernsey',
                                            'Jersey C.I.':'Jersey',
@@ -74,63 +76,63 @@ def transform_data(data):
     
     # Fix Guernsey in industry
 
-    data['Industry'] = data['Industry'].replace({'Guernsey':'Financials'})
+    data['industry'] = data['industry'].replace({'Guernsey':'Financials'})
 
     # Fix unknown in industry, assign the values based on company name
 
-    data['Industry'] = np.where((data['Industry'] == 'Unknown') & (data['Name'] == 'Craft Oil Ltd'), 'Energy',
-                                np.where((data['Industry'] == 'Unknown') & (data['Name'] == 'Kontron S&T AG'), 'Technology',
-                                         data['Industry']))
+    data['industry'] = np.where((data['industry'] == 'Unknown') & (data['name'] == 'Craft Oil Ltd'), 'Energy',
+                                np.where((data['industry'] == 'Unknown') & (data['name'] == 'Kontron S&T AG'), 'Technology',
+                                         data['industry']))
     
     #Assign consumer services to discretionary and consumer goods to consumer staples
     
-    data['Industry'] = data['Industry'].replace({'Consumer Services':'Consumer Discretionary',
+    data['industry'] = data['industry'].replace({'Consumer Services':'Consumer Discretionary',
                                              'Consumer Goods':'Consumer Staples'})
     
     #Assign oil and gas to energy
     
-    data['Industry'] = data['Industry'].replace({'Oil & Gas':'Energy'})
+    data['industry'] = data['industry'].replace({'Oil & Gas':'Energy'})
     
     #Create a list of all the unique real estate companies.
     
-    real_estate_companies = data['Name'].loc[data['Industry']== 'Real Estate'].unique().tolist()
+    real_estate_companies = data['name'].loc[data['industry']== 'Real Estate'].unique().tolist()
     
     # Up until 2020 real estate companies were categorized as financials. If a company name is in the real estate list change the industry to real estate.
     
-    data['Industry'] = np.where((data['Name'].isin(real_estate_companies)),'Real Estate',data['Industry'])
+    data['industry'] = np.where((data['name'].isin(real_estate_companies)),'Real Estate',data['industry'])
     
     #If a company is in real estate and fixed income change the industry to corporate bonds
     
-    data['Industry'] = np.where((data['Industry'] == 'Real Estate') & (data['category'] == 'Fixed Income'), 'Corporate Bonds',data['Industry'])
+    data['industry'] = np.where((data['industry'] == 'Real Estate') & (data['category'] == 'Fixed Income'), 'Corporate Bonds',data['industry'])
     
     #Amalgamate Securitized and Securitized Bonds
     
-    data['Industry'] = data['Industry'].replace({'Securitized':'Securitized Bonds'})
+    data['industry'] = data['industry'].replace({'Securitized':'Securitized Bonds'})
     
     #Amalgamate corporate bonds
     
-    data['Industry'] = data['Industry'].replace({'Corporate':'Corporate Bonds',
+    data['industry'] = data['industry'].replace({'Corporate':'Corporate Bonds',
                                              'Corporate Bonds/Securitized Bonds':'Corporate Bonds',
                                              'Corporate/Securitized':'Corporate Bonds',
                                              'Convertible Bonds':'Corporate Bonds'})
     
     #Amalgamate treasuries
     
-    data['Industry'] = data['Industry'].replace({'Treasuries/Index Linked Bonds':'Treasuries',
+    data['industry'] = data['industry'].replace({'Treasuries/Index Linked Bonds':'Treasuries',
                                              'Treasuries/Index Linked Bonds/Government Related Bonds':'Treasuries',
                                              'Treasuries/Government Related Bonds':'Treasuries'})
     
     #Create a list of all the treasuries
     
-    list_of_treasuries = data['Name'].loc[data['Industry']== 'Treasuries'].unique().tolist()
+    list_of_treasuries = data['name'].loc[data['industry']== 'Treasuries'].unique().tolist()
     
     #If a bond name is in the list of treasuries then change the industry to treasuries
     
-    data['Industry'] = np.where((data['Name'].isin(list_of_treasuries)),'Treasuries',data['Industry'])
+    data['industry'] = np.where((data['name'].isin(list_of_treasuries)),'Treasuries',data['industry'])
     
     #Amalgamate government bonds together
     
-    data['Industry'] = data['Industry'].replace({'Government':'Government Bonds',
+    data['industry'] = data['industry'].replace({'Government':'Government Bonds',
                                              'Government Related':'Government Bonds',
                                              'Government Related Bonds':'Government Bonds',
                                              'Government Related Bonds/Corporate Bonds':'Government Bonds',
@@ -140,13 +142,8 @@ def transform_data(data):
 
 #@task
 def load_data(data):
-    
-    #Creates connection to local postgres database
-    
-    conn = psycopg2.connect(**st.secrets["postgres"])
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    
-    # Creates the connection string engine to upload a pandas dataframe to local postgres database
+       
+    # Creates a connection string engine to upload a pandas dataframe to local postgres database
     
     secrets = st.secrets["postgres"]
     user = secrets["user"]
@@ -159,38 +156,14 @@ def load_data(data):
     
     engine = create_engine(connection_str)
     
-    # Drop the oil_fund table if it exists
-    with conn.cursor() as cur:
-        cur.execute("DROP TABLE IF EXISTS oil_fund")
-    
-    #Create the 
-    with conn.cursor() as cur:
-        cur.execute("""
-            CREATE TABLE oil_fund (
-                id INTEGER PRIMARY KEY,
-                region VARCHAR(255),
-                country VARCHAR(255),
-                name VARCHAR(255),
-                industry VARCHAR(255),
-                market_value BIGINT,
-                category VARCHAR(255),
-                year INTEGER
-            )""")
-    
-    df = data
-    
-    df.to_sql('oil_fund', engine, if_exists='replace', index=False)
-    
-    # Commit the changes and close the connection
-    conn.commit()
-    conn.close()
+    #Uploads the pandas dataframe to local postgres database
+      
+    data.to_sql('oil_fund', engine, if_exists='replace', index=False)
 
 #Manual ETL process
 raw = extract_data()
 transformed = transform_data(raw)
 load_data(transformed)
-
-
 
 #This portion is used for investigating and understanding the data wrangling steps
 
