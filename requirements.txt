@@ -4,5 +4,5 @@ plotly==5.13.0
 prefect==2.8.6
 psycopg2-binary==2.9.3
 SQLAlchemy
-streamlit==1.12.2
+streamlit==1.20.0
 streamlit_option_menu==0.3.2
