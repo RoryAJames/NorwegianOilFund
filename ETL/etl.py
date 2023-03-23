@@ -160,18 +160,14 @@ def load_data(data):
       
     data.to_sql('oil_fund', engine, if_exists='replace', index=False)
 
-#Manual ETL process
+#ETL process to be managed by Prefect
 raw = extract_data()
 transformed = transform_data(raw)
 load_data(transformed)
 
-#This portion is used for investigating and understanding the data wrangling steps
 
-""" #Load transformed data
-test = transform_data()
+""" #This portion is used for investigating and understanding the data wrangling steps
 
-#Send a test csv file to desktop for easier investigating
-
-filepath = Path('C:/Users/rorya/Desktop/oil_fund_data_testing.csv')  
+filepath = Path('C:/Users/rorya/Desktop/oil_fund_data_testing.xlsx')  
 filepath.parent.mkdir(parents=True, exist_ok=True)
-test.to_csv(filepath, index=False) """
+transformed.to_excel(filepath, index=False) """
