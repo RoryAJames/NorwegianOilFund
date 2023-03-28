@@ -5,12 +5,11 @@ import numpy as np
 import streamlit as st
 from sqlalchemy import create_engine
 from pathlib import Path
-from prefect import task, flow
 
 '''A function that extracts all of the csv files from the data folder, creates a unique identifier for each CSV file, extracts the investment category and year, 
  and then combines the files together into one dataframe'''  
 
-#@task
+
 def extract_data():
     
     os.chdir('C:/Users/rorya/Desktop/Portfolio/Projects/NorwegianOilFund/data/')
@@ -41,7 +40,7 @@ def extract_data():
 
 #A function that performs all of the data cleaning tasks before loading into the database.
 
-#@task
+
 def transform_data(data):
 
     #Drop unwanted columns
@@ -140,7 +139,7 @@ def transform_data(data):
     
     return data
 
-#@task
+
 def load_data(data):
        
     # Creates a connection string engine to upload a pandas dataframe to local postgres database
@@ -160,10 +159,26 @@ def load_data(data):
       
     data.to_sql('oil_fund', engine, if_exists='replace', index=False)
 
-#ETL process to be managed by Prefect
+#Manual ETL process
 raw = extract_data()
 transformed = transform_data(raw)
-load_data(transformed)
+#load_data(transformed)
+
+#Make a seperate dataframe of unique names to test out fuzzy wuzzy matching
+
+unique_names_df = pd.DataFrame(transformed['name'].unique())
+
+#Output dataframes as excel files to desktop for further investigating
+
+def make_excel_file(file,filename):
+    filepath = Path(f'C:/Users/rorya/Desktop/{filename}.xlsx')  
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    file.to_excel(filepath, index=False)
+    
+
+make_excel_file(transformed,'oil_fund_data_testing')
+
+make_excel_file(unique_names_df,'oil_fund_unique_names')
 
 
 """ #This portion is used for investigating and understanding the data wrangling steps
