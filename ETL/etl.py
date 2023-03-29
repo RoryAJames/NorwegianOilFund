@@ -7,10 +7,7 @@ from sqlalchemy import create_engine
 from pathlib import Path
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
-
-'''A function that extracts all of the csv files from the data folder, creates a unique identifier for each CSV file, extracts the investment category and year, 
- and then combines the files together into one dataframe'''  
-
+from transform import Transformations
 
 def extract_data():
     
@@ -39,8 +36,6 @@ def extract_data():
     df = pd.concat(dfs_to_concat)
     
     return df
-
-#A function that performs all of the data cleaning tasks before loading into the database.
 
 
 def transform_data(data):
@@ -139,12 +134,16 @@ def transform_data(data):
                                              'Government Related Bonds/Corporate Bonds':'Government Bonds',
                                              'Government Related Bonds/Securitized Bonds':'Government Bonds'})
     
+    trans = Transformations()
+    
+    data = trans.merge_similar_strings(data,'name')
+    
     return data
 
 
 def load_data(data):
        
-    # Creates a connection string engine to upload a pandas dataframe to local postgres database
+    # Creates a connection string engine to upload a pandas dataframe to postgres database
     
     secrets = st.secrets["postgres"]
     user = secrets["user"]
@@ -161,12 +160,11 @@ def load_data(data):
       
     data.to_sql('oil_fund', engine, if_exists='replace', index=False)
 
+
 #Manual ETL process
 raw = extract_data()
 transformed = transform_data(raw)
-#load_data(transformed)
-
-
+load_data(transformed)
 
 
 #Output dataframes as excel files to desktop for further investigating
@@ -175,30 +173,6 @@ def make_excel_file(file,filename):
     filepath = Path(f'C:/Users/rorya/Desktop/{filename}.xlsx')  
     filepath.parent.mkdir(parents=True, exist_ok=True)
     file.to_excel(filepath, index=False)
-    
-    
-    
-    
-# A function to merge similar string columns
-def merge_similar_strings(df, col):
-    
-    merged_dict = {}
-    
-    for name in df[col].unique():
-        matches = df[df[col] == name].copy()
-        country = matches['country'].unique()
-        industry = matches['industry'].unique()
-        category = matches['category'].unique()
-        choices = df[df['country'].isin(country) & df['industry'].isin(industry) & df['category'].isin(category)][col].unique()
-        merged_name = process.extractOne(name, choices, scorer=fuzz.token_sort_ratio)[0]
-        df.loc[df[col] == name, col] = merged_name
-        merged_dict[name] = merged_name
-    
-    return df
-    
-test_fuzzy_df = merge_similar_strings(transformed, 'name')
 
 
-#make_excel_file(transformed,'oil_fund_data_testing')
-
-make_excel_file(test_fuzzy_df,'test_fuzzy')
+make_excel_file(transformed,'current_oil_fund_DB')
