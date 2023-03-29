@@ -5,6 +5,8 @@ import numpy as np
 import streamlit as st
 from sqlalchemy import create_engine
 from pathlib import Path
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
 
 '''A function that extracts all of the csv files from the data folder, creates a unique identifier for each CSV file, extracts the investment category and year, 
  and then combines the files together into one dataframe'''  
@@ -164,9 +166,8 @@ raw = extract_data()
 transformed = transform_data(raw)
 #load_data(transformed)
 
-#Make a seperate dataframe of unique names to test out fuzzy wuzzy matching
 
-unique_names_df = pd.DataFrame(transformed['name'].unique())
+
 
 #Output dataframes as excel files to desktop for further investigating
 
@@ -175,14 +176,29 @@ def make_excel_file(file,filename):
     filepath.parent.mkdir(parents=True, exist_ok=True)
     file.to_excel(filepath, index=False)
     
+    
+    
+    
+# A function to merge similar string columns
+def merge_similar_strings(df, col):
+    
+    merged_dict = {}
+    
+    for name in df[col].unique():
+        matches = df[df[col] == name].copy()
+        country = matches['country'].unique()
+        industry = matches['industry'].unique()
+        category = matches['category'].unique()
+        choices = df[df['country'].isin(country) & df['industry'].isin(industry) & df['category'].isin(category)][col].unique()
+        merged_name = process.extractOne(name, choices, scorer=fuzz.token_sort_ratio)[0]
+        df.loc[df[col] == name, col] = merged_name
+        merged_dict[name] = merged_name
+    
+    return df
+    
+test_fuzzy_df = merge_similar_strings(transformed, 'name')
 
-make_excel_file(transformed,'oil_fund_data_testing')
 
-make_excel_file(unique_names_df,'oil_fund_unique_names')
+#make_excel_file(transformed,'oil_fund_data_testing')
 
-
-""" #This portion is used for investigating and understanding the data wrangling steps
-
-filepath = Path('C:/Users/rorya/Desktop/oil_fund_data_testing.xlsx')  
-filepath.parent.mkdir(parents=True, exist_ok=True)
-transformed.to_excel(filepath, index=False) """
+make_excel_file(test_fuzzy_df,'test_fuzzy')
