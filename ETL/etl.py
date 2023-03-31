@@ -5,8 +5,6 @@ import numpy as np
 import streamlit as st
 from sqlalchemy import create_engine
 from pathlib import Path
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
 from transform import Transformations
 
 def extract_data():
@@ -42,18 +40,24 @@ def transform_data(data):
 
     #Drop unwanted columns
     
-    cols_to_drop = ['Market Value(NOK)','Voting','Ownership','Incorporation Country','file_identifier']
+    cols_to_drop = ['Market Value(NOK)','Voting','Incorporation Country','file_identifier']
 
     data.drop(columns=cols_to_drop, inplace=True)
     
-    #Rename market value column to 'Value'
+    #Rename columns
 
-    new_col = {'Market Value(USD)':'market_value'}
+    new_col = {'Market Value(USD)':'market_value',
+               'Ownership':'percent_ownership'}
+    
     data.rename(columns= new_col, inplace = True)
     
     #Make all of the columns lowercase so that you can properly query the database in postgres
     
     data.columns = data.columns.str.lower()
+    
+    #Fill the percent ownership null values in fixed income with 0
+    
+    data['percent_ownership'] = data['percent_ownership'].fillna(0)
     
     #Assign countries to their appropriate regions 
 
