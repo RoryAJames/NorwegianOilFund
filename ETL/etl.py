@@ -3,7 +3,7 @@ import glob
 import pandas as pd
 import numpy as np
 import streamlit as st
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, VARCHAR, BIGINT, NUMERIC, INTEGER
 from pathlib import Path
 from transform import Transformations
 
@@ -33,6 +33,8 @@ def extract_data():
     # Concat dataframes together to create a combined dataframe
     df = pd.concat(dfs_to_concat)
     
+    print("Files extracted.")
+    
     return df
 
 
@@ -47,8 +49,9 @@ def transform_data(data):
     #Rename columns
 
     new_col = {'Market Value(USD)':'market_value',
-               'Ownership':'percent_ownership'}
-    
+               'Ownership':'percent_ownership',
+               'Industry':'sector'}
+      
     data.rename(columns= new_col, inplace = True)
     
     #Make all of the columns lowercase so that you can properly query the database in postgres
@@ -74,65 +77,65 @@ def transform_data(data):
                                            'Lichtenstein':'Liechtenstein',
                                            'Tanzania *, United Republic of':'Tanzania'})
     
-    # Fix Guernsey in industry
+    # Fix Guernsey in sector
 
-    data['industry'] = data['industry'].replace({'Guernsey':'Financials'})
+    data['sector'] = data['sector'].replace({'Guernsey':'Financials'})
 
-    # Fix unknown in industry, assign the values based on company name
+    # Fix unknown in sector, assign the values based on company name
 
-    data['industry'] = np.where((data['industry'] == 'Unknown') & (data['name'] == 'Craft Oil Ltd'), 'Energy',
-                                np.where((data['industry'] == 'Unknown') & (data['name'] == 'Kontron S&T AG'), 'Technology',
-                                         data['industry']))
+    data['sector'] = np.where((data['sector'] == 'Unknown') & (data['name'] == 'Craft Oil Ltd'), 'Energy',
+                                np.where((data['sector'] == 'Unknown') & (data['name'] == 'Kontron S&T AG'), 'Technology',
+                                         data['sector']))
     
     #Assign consumer services to discretionary and consumer goods to consumer staples
     
-    data['industry'] = data['industry'].replace({'Consumer Services':'Consumer Discretionary',
+    data['sector'] = data['sector'].replace({'Consumer Services':'Consumer Discretionary',
                                              'Consumer Goods':'Consumer Staples'})
     
     #Assign oil and gas to energy
     
-    data['industry'] = data['industry'].replace({'Oil & Gas':'Energy'})
+    data['sector'] = data['sector'].replace({'Oil & Gas':'Energy'})
     
     #Create a list of all the unique real estate companies.
     
-    real_estate_companies = data['name'].loc[data['industry']== 'Real Estate'].unique().tolist()
+    real_estate_companies = data['name'].loc[data['sector']== 'Real Estate'].unique().tolist()
     
-    # Up until 2020 real estate companies were categorized as financials. If a company name is in the real estate list change the industry to real estate.
+    # Up until 2020 real estate companies were categorized as financials. If a company name is in the real estate list change the sector to real estate.
     
-    data['industry'] = np.where((data['name'].isin(real_estate_companies)),'Real Estate',data['industry'])
+    data['sector'] = np.where((data['name'].isin(real_estate_companies)),'Real Estate',data['sector'])
     
-    #If a company is in real estate and fixed income change the industry to corporate bonds
+    #If a company is in real estate and fixed income change the sector to corporate bonds
     
-    data['industry'] = np.where((data['industry'] == 'Real Estate') & (data['category'] == 'Fixed Income'), 'Corporate Bonds',data['industry'])
+    data['sector'] = np.where((data['sector'] == 'Real Estate') & (data['category'] == 'Fixed Income'), 'Corporate Bonds',data['sector'])
     
     #Amalgamate Securitized and Securitized Bonds
     
-    data['industry'] = data['industry'].replace({'Securitized':'Securitized Bonds'})
+    data['sector'] = data['sector'].replace({'Securitized':'Securitized Bonds'})
     
     #Amalgamate corporate bonds
     
-    data['industry'] = data['industry'].replace({'Corporate':'Corporate Bonds',
+    data['sector'] = data['sector'].replace({'Corporate':'Corporate Bonds',
                                              'Corporate Bonds/Securitized Bonds':'Corporate Bonds',
                                              'Corporate/Securitized':'Corporate Bonds',
                                              'Convertible Bonds':'Corporate Bonds'})
     
     #Amalgamate treasuries
     
-    data['industry'] = data['industry'].replace({'Treasuries/Index Linked Bonds':'Treasuries',
+    data['sector'] = data['sector'].replace({'Treasuries/Index Linked Bonds':'Treasuries',
                                              'Treasuries/Index Linked Bonds/Government Related Bonds':'Treasuries',
                                              'Treasuries/Government Related Bonds':'Treasuries'})
     
     #Create a list of all the treasuries
     
-    list_of_treasuries = data['name'].loc[data['industry']== 'Treasuries'].unique().tolist()
+    list_of_treasuries = data['name'].loc[data['sector']== 'Treasuries'].unique().tolist()
     
-    #If a bond name is in the list of treasuries then change the industry to treasuries
+    #If a bond name is in the list of treasuries then change the sector to treasuries
     
-    data['industry'] = np.where((data['name'].isin(list_of_treasuries)),'Treasuries',data['industry'])
+    data['sector'] = np.where((data['name'].isin(list_of_treasuries)),'Treasuries',data['sector'])
     
     #Amalgamate government bonds together
     
-    data['industry'] = data['industry'].replace({'Government':'Government Bonds',
+    data['sector'] = data['sector'].replace({'Government':'Government Bonds',
                                              'Government Related':'Government Bonds',
                                              'Government Related Bonds':'Government Bonds',
                                              'Government Related Bonds/Corporate Bonds':'Government Bonds',
@@ -141,6 +144,8 @@ def transform_data(data):
     trans = Transformations()
     
     data = trans.merge_similar_strings(data,'name')
+    
+    print("Transformations complete.")
     
     return data
 
@@ -160,15 +165,33 @@ def load_data(data):
     
     engine = create_engine(connection_str)
     
-    #Uploads the pandas dataframe to local postgres database
+    print("Database connection established.")
+    
+    #Set the data types of the dataframe columns to be uploaded to postgres
+    
+    df_schema = {
+    'region': VARCHAR(50),
+    'country': VARCHAR(50),
+    'name': VARCHAR(50),
+    'sector': VARCHAR(30),
+    'market_value': BIGINT,
+    'percent_ownership': NUMERIC,
+    'category': VARCHAR(30),
+    'year': INTEGER}
+    
+    #Uploads the pandas dataframe to postgres database
       
-    data.to_sql('oil_fund', engine, if_exists='replace', index=False)
+    data.to_sql('oil_fund', engine, if_exists='replace', index=False, dtype = df_schema)
+    
+    print("Data loaded into Postgres.")
 
 
 #Manual ETL process
 raw = extract_data()
 transformed = transform_data(raw)
 load_data(transformed)
+
+print("ETL process complete.")
 
 
 #Output dataframes as excel files to desktop for further investigating

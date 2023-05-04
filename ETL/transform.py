@@ -27,10 +27,10 @@ class Transformations:
 
             # get the unique country and industry values for the matches
             country = matches['country'].unique()
-            industry = matches['industry'].unique()
+            sector = matches['sector'].unique()
 
             # filter the original dataframe by country and industry and get the unique string values
-            choices = df[df['country'].isin(country) & df['industry'].isin(industry)][col].unique()
+            choices = df[df['country'].isin(country) & df['sector'].isin(sector)][col].unique()
 
             # find the closest match to the current string in the filtered choices using fuzzywuzzy extractOne
             merged_name = process.extractOne(name, choices, scorer=fuzz.token_sort_ratio)[0]
