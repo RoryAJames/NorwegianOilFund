@@ -143,6 +143,8 @@ def transform_data(data):
     
     trans = Transformations()
     
+    print("Merging similar strings.")
+    
     data = trans.merge_similar_strings(data,'name')
     
     print("Transformations complete.")
@@ -170,18 +172,18 @@ def load_data(data):
     #Set the data types of the dataframe columns to be uploaded to postgres
     
     df_schema = {
-    'region': VARCHAR(50),
-    'country': VARCHAR(50),
-    'name': VARCHAR(50),
-    'sector': VARCHAR(30),
+    'region': VARCHAR(100),
+    'country': VARCHAR(100),
+    'name': VARCHAR(100),
+    'sector': VARCHAR(100),
     'market_value': BIGINT,
     'percent_ownership': NUMERIC,
-    'category': VARCHAR(30),
+    'category': VARCHAR(100),
     'year': INTEGER}
     
     #Uploads the pandas dataframe to postgres database
       
-    data.to_sql('oil_fund', engine, if_exists='replace', index=False, dtype = df_schema)
+    data.to_sql('oil_fund', engine, if_exists='replace', index=False, dtype = df_schema, chunksize = 1000)
     
     print("Data loaded into Postgres.")
 
@@ -196,10 +198,10 @@ print("ETL process complete.")
 
 #Output dataframes as excel files to desktop for further investigating
 
-def make_excel_file(file,filename):
-    filepath = Path(f'C:/Users/rorya/Desktop/{filename}.xlsx')  
-    filepath.parent.mkdir(parents=True, exist_ok=True)
-    file.to_excel(filepath, index=False)
+# def make_excel_file(file,filename):
+#     filepath = Path(f'C:/Users/rorya/Desktop/{filename}.xlsx')  
+#     filepath.parent.mkdir(parents=True, exist_ok=True)
+#     file.to_excel(filepath, index=False)
 
 
-make_excel_file(transformed,'current_oil_fund_DB')
+# make_excel_file(transformed,'current_oil_fund_DB')
