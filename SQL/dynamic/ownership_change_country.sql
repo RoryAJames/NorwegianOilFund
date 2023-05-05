@@ -1,5 +1,5 @@
 WITH yearly_avg AS (
-    SELECT year, country, AVG(percent_ownership)::numeric AS avg_percent_ownership
+    SELECT year, country, AVG(percent_ownership) AS avg_percent_ownership
     FROM oil_fund
     WHERE category = 'Equity' AND year > (SELECT MAX(year) - (%s + 1) FROM oil_fund)
     AND country = %s

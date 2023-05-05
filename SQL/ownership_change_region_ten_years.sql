@@ -17,7 +17,7 @@ running_total AS (
     WHERE difference IS NOT NULL
 )
 
-SELECT region, cumulative_percent_change_of_ownership
+SELECT region AS "Region", cumulative_percent_change_of_ownership
 FROM running_total
 WHERE year = (SELECT MAX(year)FROM oil_fund)
 ORDER BY cumulative_percent_change_of_ownership DESC;
