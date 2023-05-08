@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 import numpy as np
 import psycopg2
 
@@ -52,8 +53,6 @@ st.write("""The Government Pension Fund of Norway, also known simply as the Norw
              positioning itself in recent years. As such, I wanted to build this application to let users uncover deeper insights into the funds holdings.  
              """)
 
-st.write('')
-
 st.write('This project consists of three parts: ')
 
 st.markdown("- Part 1 - Exploring the historical proportions of the fund across various sectors and regions over time.")
@@ -87,19 +86,60 @@ st.write("When comparing the proportion of the fund by sector and type of fixed 
 
 sector_prop_df = run_query('SQL/sector_proportions.sql')
 
-#Plot using plotly
-sector_prop_fig = px.line(sector_prop_df, x="year", y="Proportion of Fund", color="Sector", title="Proportion of Fund By Sector Over Time", markers=True, facet_row="category")
+# Create a dictionary of colors for each sector
+equity_colors = {'Basic Materials': '#FFA07A',
+                 'Consumer Discretionary': '#20B2AA',
+                 'Consumer Staples': '#87CEFA',
+                 'Energy': '#B0E0E6',
+                 'Financials': '#7B68EE',
+                 'Health Care': '#FF7F50',
+                 'Industrials': '#6495ED',
+                 'Real Estate': '#9ACD32',
+                 'Technology': '#F08080',
+                 'Telecommunications': '#DDA0DD',
+                 'Utilities': '#00FFFF'}
 
-sector_prop_fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+fixed_income_colors = {'Corporate Bonds': '#FFD700',
+                       'Government Bonds': '#CD5C5C',
+                       'Securitized Bonds': '#ADFF2F',
+                       'Treasuries': '#2F4F4F'}
 
-sector_prop_fig.update_layout(title_x=0.3)
-    
-# Adjust subplot margin and height
-sector_prop_fig.update_yaxes(matches=None)
-sector_prop_fig.update_layout(margin=dict(l=20, r=20, t=50, b=20), height=800)
+# Initialize figure with subplots
+fig = make_subplots(rows=2, cols=1, subplot_titles=("Equity Investments", "Fixed Income Investments"))
 
-# Plot in streamlit
-st.plotly_chart(sector_prop_fig, use_container_width=True)
+# Create line plots for each sector within each category
+for i, category in enumerate(sector_prop_df['category'].unique()):
+    sector_df = sector_prop_df[sector_prop_df['category'] == category]
+    for j, sector in enumerate(sector_df['Sector'].unique()):
+        sector_data = sector_df[sector_df['Sector'] == sector]
+        if category == 'Equity':
+            fig.add_trace(go.Scatter(x=sector_data['year'], y=sector_data['Proportion of Fund'], 
+                                     mode='lines+markers', name=sector, 
+                                     line=dict(color=equity_colors[sector]), showlegend=i==0), row=i+1, col=1)
+        else:
+            fig.add_trace(go.Scatter(x=sector_data['year'], y=sector_data['Proportion of Fund'], 
+                                     mode='lines+markers', name=sector, 
+                                     line=dict(color=fixed_income_colors[sector]), showlegend=True), row=i+1, col=1)
+
+# Update xaxis and yaxis properties
+fig.update_xaxes(title_text='Year', row=2, col=1)
+fig.update_yaxes(title_text='Proportion Of Fund (%)', row=1, col=1)
+fig.update_yaxes(title_text='Proportion Of Fund (%)', row=2, col=1)
+
+# Update subplot titles
+fig.update_layout(title='Proportion of Fund By Sector and Fixed Income Type Over Time', height=800, margin=dict(t=120), title_x = 0.3)
+
+# Set subplot titles
+fig.update_annotations(
+    {'text': 'Equity Investments', 'font': {'size': 24}, 'x': 0.5, 'y': 1.05, 'showarrow': False},
+    {'text': 'Fixed Income Investments', 'font': {'size': 24}, 'x': 0.5, 'y': 0.5, 'showarrow': False}
+)
+
+# Show legend for each subplot
+fig.update_layout(showlegend=True)
+
+# Display plot in Streamlit
+st.plotly_chart(fig, use_container_width=True)
 
 st.write("Insert blurb about sector proportions over time.")
 
@@ -124,7 +164,6 @@ sector_ownership_fig = px.line(sector_ownership_df, x="year", y="avg_percent_own
 sector_ownership_fig.update_layout(title_x=0.3)
 
 st.plotly_chart(sector_ownership_fig, use_container_width=True)
-
 
 st.subheader("Part 3: Exploring Individual Countries")
 
