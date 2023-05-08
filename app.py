@@ -21,7 +21,7 @@ st.sidebar.info(
     """
     )
 
-# Initialize connection to Postgres DB .Uses st.cache_resource to only run once.
+# Initialize connection to Postgres DB. Uses st.cache_resource to only run once.
 @st.cache_resource
 def init_connection():
     return psycopg2.connect(**st.secrets["postgres"])
@@ -45,10 +45,28 @@ st.title("Analyzing The Norwegian Oil Fund")
 
 st.write("""The Government Pension Fund of Norway, also known simply as the Norwegian Oil Fund, is one of the world's largest sovereign wealth funds.
              At the end of 2022, the fund had a total market value of nearly \$1.2 trillion in assets (USD), which is roughly \$233,000 per Norwegian citizen.
-             The fund invests primarily in equities, fixed-income, physical real estate, and renewable energy infrastructure.
+             The fund invests primarily in equities, fixed-income, physical real estate, and renewable energy infrastructure. The  funds investments are spread
+             across most markets, countries, and currencies to achieve broad exposure to global growth while maintaining risk diversification. Assessing the funds holdings
+             is a great way to get insight into how the one can construct a reliable investment portfolio. While the funds website provides users with an accessible way to
+             quickly view the funds annual holdings, I found that it can lack in terms of uncovering insights into how the fund has changed over time, and how it has been
+             positioning itself in recent years. As such, I wanted to build this application to let users uncover deeper insights into the funds holdings.  
              """)
 
-st.subheader("Part 1: Proportions Over Time")
+st.write('')
+
+st.write('This project consists of three parts: ')
+
+st.markdown("- Part 1 - Exploring the historical proportions of the fund across various sectors and regions over time.")
+st.markdown("- Part 2 - Analyzing the equity inflows of the fund by assessing ownership percentages.")
+st.markdown("- Part 3 - Allowing a user to slice and dice the data based on their interests.")
+
+st.write(""" A note - I decided to only focus on the funds equity and fixed income holdings in this project. The reason for this is that the vast majority of investors
+         do not have the ability to buy physical real estate beyond their principal residence, and renewable energy infrastructure. 
+         This project is for educational purposes only.""")
+
+st.subheader("Part 1: Fund Proportions Over Time")
+
+st.write("The most logical place to start the analysis is by comparing the funds equity to fixed income proportion.")
 
 ##EQUITY TO FIXED INCOME PROPORTION
 
@@ -63,7 +81,7 @@ eq_fi_fig.update_layout(title='Equity and Fixed Income Proportions Over Time', t
 # Plot in streamlit
 st.plotly_chart(eq_fi_fig, use_container_width=True)
 
-st.write("Insert blurb about the equity to fixed income proportions over time.")
+st.write("When comparing the proportion of the fund by sector and type of fixed income over time...")
 
 ##SECTOR PROPORTIONS
 
