@@ -55,17 +55,24 @@ st.write("""The Government Pension Fund of Norway, also known simply as the Norw
 
 st.write('This project consists of three parts: ')
 
-st.markdown("- Part 1 - Exploring the historical proportions of the fund across various sectors and regions over time.")
+st.markdown("- Part 1 - Exploring the historical proportions of the fund over time.")
 st.markdown("- Part 2 - Analyzing the equity inflows of the fund by assessing ownership percentages.")
 st.markdown("- Part 3 - Allowing a user to slice and dice the data based on their interests.")
 
-st.write(""" A note - I decided to only focus on the funds equity and fixed income holdings in this project. The reason for this is that the vast majority of investors
-         do not have the ability to buy physical real estate beyond their principal residence, and renewable energy infrastructure. 
-         This project is for educational purposes only.""")
+st.write(""" A note - I decided to only focus on the funds equity and fixed income holdings for this project. The reason for this is that the vast majority of investors
+         do not have the ability to buy physical real estate beyond their principal residence, and renewable energy infrastructure. This project is for educational purposes.""")
 
 st.subheader("Part 1: Fund Proportions Over Time")
 
-st.write("The most logical place to start the analysis is by comparing the funds equity to fixed income proportion.")
+st.write("""The most logical place to start the analysis is comparing the funds equity to fixed income proportions. Prior to the 2008 financial crisis, a majority of the funds
+         assets were in infixed income investments. During the financial crisis, central banks around the world were forced to implement unconventional monetary policy measures such as
+         quantitative easing (QE), which involved buying large amounts of government bonds and other securities to inject liquidity into the financial system. As a result of QE,
+         bond yields fell, making them less attractive to investors. This clearly played out for the oil fund as it shifted to a typical 60/40 equity to fixed income
+         portfolio in 2009, which was maintained for half a decade. In 2017, the Norwegian government announced that it would increase the equity allocation from 60\% to 70\% 
+         of the fund's total assets over a period of time. The goal was to improve the fund's long-term return prospects by increasing exposure to equity markets, which
+         historically provided higher returns compared to fixed income investments. The equity proportion of the fund peaked in 2020 at nearly 74\% of total assets.
+         Since the covid pandemic the equity proportion has gradually subsided. While this could be attributed to equity markets coming under recent pressure, I will note that bond
+         yields have also risen recently and have become more attractive on a risk adjusted basis for pension funds.""")
 
 ##EQUITY TO FIXED INCOME PROPORTION
 
@@ -73,16 +80,18 @@ equity_fi_df = run_query('SQL/eq_fi_proportions.sql')
 
 # Plot the data using plotly
 eq_fi_fig = px.line(equity_fi_df, x='year', y=['Equity Proportion', 'Fixed Income Proportion'], markers=True)
+eq_fi_fig.update_traces(mode="markers+lines", hovertemplate=None)
 
 # Update the plotly figure object layout
-eq_fi_fig.update_layout(title='Equity and Fixed Income Proportions Over Time', title_x = 0.3, xaxis_title='Year', yaxis_title='Proportion Of Fund (%)')
+eq_fi_fig.update_layout(title='Equity and Fixed Income Proportions Over Time', title_x = 0.4, xaxis_title='Year', yaxis_title='Proportion Of Fund (%)',
+                        hovermode="x unified", legend_title = "")
     
 # Plot in streamlit
 st.plotly_chart(eq_fi_fig, use_container_width=True)
 
-st.write("When comparing the proportion of the fund by sector and type of fixed income over time...")
-
 ##SECTOR PROPORTIONS
+
+st.write("When comparing the various sectors and type of fixed income over time...")
 
 sector_prop_df = run_query('SQL/sector_proportions.sql')
 
@@ -127,12 +136,12 @@ fig.update_yaxes(title_text='Proportion Of Fund (%)', row=1, col=1)
 fig.update_yaxes(title_text='Proportion Of Fund (%)', row=2, col=1)
 
 # Update subplot titles
-fig.update_layout(title='Proportion of Fund By Sector and Fixed Income Type Over Time', height=800, margin=dict(t=120), title_x = 0.3)
+fig.update_layout(title='Sector and Fixed Income Proportions Over Time', height=800, margin=dict(t=120), title_x = 0.35)
 
 # Set subplot titles
 fig.update_annotations(
     {'text': 'Equity Investments', 'font': {'size': 24}, 'x': 0.5, 'y': 1.05, 'showarrow': False},
-    {'text': 'Fixed Income Investments', 'font': {'size': 24}, 'x': 0.5, 'y': 0.5, 'showarrow': False}
+    {'text': 'Fixed Income Investments', 'font': {'size': 24}, 'x': 0.5, 'y': 1.05, 'showarrow': False}
 )
 
 # Show legend for each subplot
