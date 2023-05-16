@@ -12,12 +12,12 @@ difference AS (
 ),
 running_total AS (
     SELECT year, sector, 
-           ROUND(SUM(difference) OVER (PARTITION BY sector ORDER BY year) * 100, 2) AS cumulative_percent_change_of_ownership
+           ROUND(SUM(difference) OVER (PARTITION BY sector ORDER BY year) * 10000, 2) AS cumulative_bp_change_of_ownership
     FROM difference
     WHERE difference IS NOT NULL
 )
 
-SELECT sector, cumulative_percent_change_of_ownership
+SELECT sector as "Sector", cumulative_bp_change_of_ownership
 FROM running_total
 WHERE year = (SELECT MAX(year)FROM oil_fund)
-ORDER BY cumulative_percent_change_of_ownership DESC;
+ORDER BY cumulative_bp_change_of_ownership DESC;
