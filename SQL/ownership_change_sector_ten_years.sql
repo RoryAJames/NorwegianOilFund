@@ -12,7 +12,7 @@ difference AS (
 ),
 running_total AS (
     SELECT year, sector, 
-           ROUND(SUM(difference) OVER (PARTITION BY sector ORDER BY year) * 10000, 2) AS cumulative_bp_change_of_ownership
+           ROUND(SUM(difference) OVER (PARTITION BY sector ORDER BY year), 2) AS cumulative_bp_change_of_ownership
     FROM difference
     WHERE difference IS NOT NULL
 )
