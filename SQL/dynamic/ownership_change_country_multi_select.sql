@@ -2,7 +2,7 @@ WITH yearly_avg AS (
     SELECT year, country, AVG(percent_ownership) AS avg_percent_ownership
     FROM oil_fund
     WHERE category = 'Equity' AND year > (SELECT MAX(year) - (%s + 1) FROM oil_fund)
-    AND country = %s
+    AND country IN ({})
     GROUP BY year, country
     ORDER BY year, country
 ),
@@ -18,7 +18,7 @@ running_total AS (
     WHERE difference IS NOT NULL
 )
 
-SELECT country, cumulative_percent_change_of_ownership
+SELECT country AS "Country", cumulative_percent_change_of_ownership
 FROM running_total
 WHERE year = (SELECT MAX(year)FROM oil_fund)
 ORDER BY cumulative_percent_change_of_ownership DESC;
