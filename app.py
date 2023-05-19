@@ -76,7 +76,7 @@ st.write("""The most logical place to start the analysis is comparing the funds 
 
 ##EQUITY TO FIXED INCOME PROPORTION
 
-equity_fi_df = run_query('SQL/eq_fi_proportions.sql')
+equity_fi_df = run_query('SQL/static/eq_fi_proportions.sql')
 
 # Plot the data using plotly
 eq_fi_fig = px.line(equity_fi_df, x='year', y=['Equity Proportion', 'Fixed Income Proportion'], markers=True)
@@ -93,7 +93,7 @@ st.plotly_chart(eq_fi_fig, use_container_width=True)
 
 st.write("When comparing the various sectors and type of fixed income over time...")
 
-sector_prop_df = run_query('SQL/sector_proportions.sql')
+sector_prop_df = run_query('SQL/static/sector/sector_proportions.sql')
 
 # Create a dictionary of colors for each sector
 equity_colors = {'Basic Materials': '#FFA07A',
@@ -154,7 +154,7 @@ st.write("Insert blurb about sector proportions over time.")
 
 ##REGION PROPORTIONS
 
-region_prop_df = run_query('SQL/region_proportions.sql')
+region_prop_df = run_query('SQL/static/region/region_proportions.sql')
 
 region_prop_fig = px.line(region_prop_df, x="year", y="proportion", color="region", title="Proportion of Fund By Region Over Time", markers=True)
 
@@ -166,7 +166,7 @@ st.subheader("Part 2: Equity Inflows Over Time")
 
 ## AVG OWNERSHIP BY SECTOR OVER TIME
 
-sector_ownership_df = run_query('SQL/ownership_sector.sql')
+sector_ownership_df = run_query('SQL/static/sector/sector_ownership.sql')
 
 sector_ownership_fig = px.line(sector_ownership_df, x="year", y="avg_percent_ownership", color="Sector", title="Average Ownership By Sector Over Time", markers=True)
 
