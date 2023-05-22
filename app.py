@@ -176,6 +176,8 @@ st.plotly_chart(sector_ownership_fig, use_container_width=True)
 
 st.subheader("Part 3: Exploring Individual Countries")
 
+countries_df = run_query('SQL/static/distinct_countries.sql')
 
+country_selections = st.multiselect('Select countries that you are interested in: ',countries_df)
 
 

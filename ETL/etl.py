@@ -75,6 +75,8 @@ def transform_data(data):
                                            'Gurensey':'Guernsey',
                                            'Jersey C.I.':'Jersey',
                                            'Lichtenstein':'Liechtenstein',
+                                           'Isle of Man':'Isle Of Man',
+                                           'Trinidad And Tobago':'Trinidad and Tobago',
                                            'Tanzania *, United Republic of':'Tanzania'})
     
     # Fix Guernsey in sector
