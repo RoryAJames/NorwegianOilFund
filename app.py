@@ -208,6 +208,37 @@ mrkt_value_ownership_change_sector_ten_years_fig.update_yaxes(title_text='Cumula
 
 st.plotly_chart(mrkt_value_ownership_change_sector_ten_years_fig, use_container_width=True)
 
+## AVG OWNERSHIP BY REGION OVER TIME
+
+st.write("""While North America is the largest regional proportion of the fund, when assessing the average ownership it doesn't appear that the fund has been buying into the
+         North American markets relative to other regions.
+         """)
+
+region_ownership_df = run_query('SQL/static/region/region_ownership.sql')
+
+region_ownership_fig = px.line(region_ownership_df, x="year", y="avg_percent_ownership", color="Region", title="Average Ownership By Region Over Time", markers=True)
+
+region_ownership_fig.update_layout(title_x=0.3)
+region_ownership_fig.update_xaxes(title_text='Year')
+region_ownership_fig.update_yaxes(title_text='Average Ownership (%)')
+
+st.plotly_chart(region_ownership_fig, use_container_width=True)
+
+## AVG OWNERSHIP BY MSCI MARKET TYPE OVER TIME
+
+MSCI_ownership_df = run_query('SQL/static/region/MSCI_ownership.sql')
+
+MSCI_ownership_fig = px.line(MSCI_ownership_df, x="year", y="avg_percent_ownership", color="msci_market", title="Average Ownership By MSCI Market Type Over Time", markers=True)
+
+MSCI_ownership_fig.update_layout(title_x=0.3, hovermode="x unified", legend_title = "")
+MSCI_ownership_fig.update_xaxes(title_text='Year')
+MSCI_ownership_fig.update_yaxes(title_text='Average Ownership (%)')
+MSCI_ownership_fig.update_traces(mode="markers+lines", hovertemplate=None)
+
+with st.expander("Click Here To See Data Based On MSCI Market Classification"):
+    st.plotly_chart(MSCI_ownership_fig, use_container_width=True)
+
+
 st.subheader("Part 3: Exploring Individual Countries")
 
 #List of countries in the database that is passed to multiselect 
