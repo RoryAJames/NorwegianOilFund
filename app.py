@@ -42,6 +42,19 @@ def run_query(query_path):
         columns = [desc[0] for desc in cur.description]
         return pd.DataFrame(results, columns=columns)
 
+# Function that allows for multiselect in countries section    
+@st.cache_data(ttl=600)
+def run_query_dynamic_country(query_path, num_years, countries):
+    with open(query_path, 'r') as file:
+        query = file.read()
+    placeholders = ','.join(['%s'] * len(countries))
+    formatted_query = query.format(placeholders)
+    with conn.cursor() as cur:
+        cur.execute(formatted_query, (num_years, *countries))
+        results = cur.fetchall()
+        columns = [desc[0] for desc in cur.description]
+        return pd.DataFrame(results, columns=columns)
+
 st.title("Analyzing The Norwegian Oil Fund")
 
 st.write("""The Government Pension Fund of Norway, also known simply as the Norwegian Oil Fund, is one of the world's largest sovereign wealth funds.
@@ -114,7 +127,7 @@ fixed_income_colors = {'Corporate Bonds': '#FFD700',
                        'Treasuries': '#2F4F4F'}
 
 # Initialize figure with subplots
-fig = make_subplots(rows=2, cols=1, subplot_titles=("Equity Investments", "Fixed Income Investments"))
+sector_prop_fig = make_subplots(rows=2, cols=1, subplot_titles=("Equity Investments", "Fixed Income Investments"))
 
 # Create line plots for each sector within each category
 for i, category in enumerate(sector_prop_df['category'].unique()):
@@ -122,33 +135,33 @@ for i, category in enumerate(sector_prop_df['category'].unique()):
     for j, sector in enumerate(sector_df['Sector'].unique()):
         sector_data = sector_df[sector_df['Sector'] == sector]
         if category == 'Equity':
-            fig.add_trace(go.Scatter(x=sector_data['year'], y=sector_data['Proportion of Fund'], 
+            sector_prop_fig.add_trace(go.Scatter(x=sector_data['year'], y=sector_data['Proportion of Fund'], 
                                      mode='lines+markers', name=sector, 
                                      line=dict(color=equity_colors[sector]), showlegend=i==0), row=i+1, col=1)
         else:
-            fig.add_trace(go.Scatter(x=sector_data['year'], y=sector_data['Proportion of Fund'], 
+            sector_prop_fig.add_trace(go.Scatter(x=sector_data['year'], y=sector_data['Proportion of Fund'], 
                                      mode='lines+markers', name=sector, 
                                      line=dict(color=fixed_income_colors[sector]), showlegend=True), row=i+1, col=1)
 
 # Update xaxis and yaxis properties
-fig.update_xaxes(title_text='Year', row=2, col=1)
-fig.update_yaxes(title_text='Proportion Of Fund (%)', row=1, col=1)
-fig.update_yaxes(title_text='Proportion Of Fund (%)', row=2, col=1)
+sector_prop_fig.update_xaxes(title_text='Year', row=2, col=1)
+sector_prop_fig.update_yaxes(title_text='Proportion Of Fund (%)', row=1, col=1)
+sector_prop_fig.update_yaxes(title_text='Proportion Of Fund (%)', row=2, col=1)
 
 # Update subplot titles
-fig.update_layout(title='Sector and Fixed Income Proportions Over Time', height=800, margin=dict(t=120), title_x = 0.35)
+sector_prop_fig.update_layout(title='Sector and Fixed Income Proportions Over Time', height=800, margin=dict(t=120), title_x = 0.35)
 
 # Set subplot titles
-fig.update_annotations(
+sector_prop_fig.update_annotations(
     {'text': 'Equity Investments', 'font': {'size': 24}, 'x': 0.5, 'y': 1.05, 'showarrow': False},
     {'text': 'Fixed Income Investments', 'font': {'size': 24}, 'x': 0.5, 'y': 1.05, 'showarrow': False}
 )
 
 # Show legend for each subplot
-fig.update_layout(showlegend=True)
+sector_prop_fig.update_layout(showlegend=True)
 
 # Display plot in Streamlit
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(sector_prop_fig, use_container_width=True)
 
 st.write("Insert blurb about sector proportions over time.")
 
@@ -159,6 +172,9 @@ region_prop_df = run_query('SQL/static/region/region_proportions.sql')
 region_prop_fig = px.line(region_prop_df, x="year", y="proportion", color="region", title="Proportion of Fund By Region Over Time", markers=True)
 
 region_prop_fig.update_layout(title_x=0.3)
+
+region_prop_fig.update_xaxes(title_text='Year')
+region_prop_fig.update_yaxes(title_text='Proportion Of Fund (%)')
 
 st.plotly_chart(region_prop_fig, use_container_width=True)
 
@@ -176,8 +192,24 @@ st.plotly_chart(sector_ownership_fig, use_container_width=True)
 
 st.subheader("Part 3: Exploring Individual Countries")
 
+#List of countries in the database that is passed to multiselect 
 countries_df = run_query('SQL/static/distinct_countries.sql')
 
-country_selections = st.multiselect('Select countries that you are interested in: ',countries_df)
+## CUMULATIVE OWNERSHIP CHANGE USER SPECIFIED
 
+row1_col1, row1_col2 = st.columns([1,1])
 
+with row1_col1:
+    country_selection = st.multiselect('Select Countries Of Interest: ',countries_df, default=['Canada', 'United States'])
+    
+with row1_col2:
+    year_selection = st.number_input('Select Number of Years', min_value= 0, max_value= 20, value= 1)
+    
+ownership_change_country_dynamic_df = run_query_dynamic_country('SQL/dynamic/ownership_change_country_multi_select.sql',year_selection,country_selection)
+
+fig_ownership_change_country_dynamic = px.bar(ownership_change_country_dynamic_df, x = 'Country', y='cumulative_bp_change_of_ownership',
+                                              text_auto= True)
+
+fig_ownership_change_country_dynamic.update_yaxes(title_text='Cumulative Change In Ownership (Basis Points)')
+
+st.plotly_chart(fig_ownership_change_country_dynamic, use_container_width=True)
