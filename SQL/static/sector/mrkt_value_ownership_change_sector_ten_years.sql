@@ -34,7 +34,7 @@ yearly_avg_difference AS (
 
 yearly_avg_running_total AS (
     SELECT year, sector, 
-           ROUND(SUM(difference) OVER (PARTITION BY sector ORDER BY year) * 100, 2) AS cumulative_bp_change_of_ownership
+           ROUND(SUM(difference) OVER (PARTITION BY sector ORDER BY year), 2) AS cumulative_bp_change_of_ownership
     FROM yearly_avg_difference
     WHERE difference IS NOT NULL
 )

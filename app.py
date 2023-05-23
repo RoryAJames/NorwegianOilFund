@@ -187,8 +187,26 @@ sector_ownership_df = run_query('SQL/static/sector/sector_ownership.sql')
 sector_ownership_fig = px.line(sector_ownership_df, x="year", y="avg_percent_ownership", color="Sector", title="Average Ownership By Sector Over Time", markers=True)
 
 sector_ownership_fig.update_layout(title_x=0.3)
+sector_ownership_fig.update_xaxes(title_text='Year')
+sector_ownership_fig.update_yaxes(title_text='Average Ownership (%)')
 
 st.plotly_chart(sector_ownership_fig, use_container_width=True)
+
+## Cumulative Change In Percent Ownership and Market Value By Sector - Last 10 Years
+
+mrkt_value_ownership_change_sector_ten_years_df = run_query('SQL/static/sector/mrkt_value_ownership_change_sector_ten_years.sql')
+
+mrkt_value_ownership_change_sector_ten_years_fig = px.scatter(mrkt_value_ownership_change_sector_ten_years_df, 
+                                                              x= 'Cumulative Average Ownership Change', y= 'Cumulative Market Value Percent Change',
+                                                              color='Sector',
+                                                              title="Cumulative Change In Ownership and Market Value By Sector - Last 10 Years")
+
+mrkt_value_ownership_change_sector_ten_years_fig.update_traces(marker_size=10)
+mrkt_value_ownership_change_sector_ten_years_fig.update_layout(title_x=0.3, showlegend=False)
+mrkt_value_ownership_change_sector_ten_years_fig.update_xaxes(title_text='Cumulative Change In Average Ownership (Basis Points)')
+mrkt_value_ownership_change_sector_ten_years_fig.update_yaxes(title_text='Cumulative Change In Market Value (%)')
+
+st.plotly_chart(mrkt_value_ownership_change_sector_ten_years_fig, use_container_width=True)
 
 st.subheader("Part 3: Exploring Individual Countries")
 
@@ -205,6 +223,60 @@ with row1_col1:
 with row1_col2:
     year_selection = st.number_input('Select Number of Years', min_value= 0, max_value= 20, value= 1)
     
+#Preset list of countries based on international forums.
+
+g7_countries = ['Canada','France','Germany','Italy','Japan','United States','United Kingdom']
+
+g20_countries = ['Canada','France','Germany','Italy','Japan','United States','United Kingdom', 'Argentina','Australia','Brazil','China','India','Indonesia','South Korea',
+                 'Mexico','Russia','Saudi Arabia','South Africa','Turkey']
+
+nato_countries = ['Canada','France','Germany','Italy','Belgium','United States','United Kingdom','Bulgaria','Croatia','Czech Republic','Denmark','Estonia','Finland',
+                  'Greece','Hungary','Iceland','Latvia','Lithuania','Luxembourg','Netherlands','Poland','Portugal','Romania','Slovakia','Slovenia','Spain','Turkey']
+
+apec_countries = ['Canada','United States','Australia','Chile','China','Hong Kong','Indonesia','Japan','South Korea','Malaysia','Mexico','New Zealand','Papua New Guinea',
+                  'Peru','Philippines','Russia','Sinqapore','Taiwan','Thailand','Vietnam']
+
+msci_developed_markets = countries = ['Australia','Austria','Belgium','Canada','Denmark','Finland','France','Germany','Hong Kong','Ireland','Israel','Italy','Japan',
+                                      'Netherlands','New Zealand','Norway','Portugal','Singapore','South Korea','Spain','Sweden','Switzerland','United Kingdom',
+                                      'United States']
+
+
+msci_emerging_markets = ['Brazil','Chile','China','Colombia','Czech Republic','Egypt','Greece','Hungary','Indonesia','India','South Korea','Mexico','Malaysia',
+                        'Peru','Philippines','Poland','Qatar','Saudi Arabia','South Africa','Thailand','Turkey','Taiwan','United Arab Emirates']
+
+msci_latin_america = ['Brazil', 'Mexico', 'Chile', 'Colombia', 'Peru', 'Argentina']
+
+country_custom_selection = st.selectbox('Custom Selection',['None','G7 Countries', 'G20 Countries', 'NATO Countries', 'APEC Countries','MSCI Developed Countries',
+                                                            'MSCI Emerging Markets','MSCI Latin America Countries'])
+
+#Change country selection based on user input. If a user has already made a selection the custom selection list will get added to the selection.
+
+if country_custom_selection == 'None':
+    country_selection = country_selection
+
+elif country_custom_selection == 'G7 Countries':
+    country_selection = country_selection + g7_countries
+
+elif country_custom_selection == 'G20 Countries':
+    country_selection = country_selection + g20_countries
+    
+elif country_custom_selection == 'NATO Countries':
+    country_selection = country_selection + nato_countries
+
+elif country_custom_selection == 'APEC Countries':
+    country_selection = country_selection + apec_countries
+
+elif country_custom_selection == 'MSCI Developed Countries':
+    country_selection = country_selection + msci_developed_markets
+    
+elif country_custom_selection == 'MSCI Emerging Markets':
+    country_selection = country_selection + msci_emerging_markets
+    
+elif country_custom_selection == 'MSCI Latin America Countries':
+    country_selection = country_selection + msci_latin_america
+    
+#Send selection parameters to dynamic function
+        
 ownership_change_country_dynamic_df = run_query_dynamic_country('SQL/dynamic/ownership_change_country_multi_select.sql',year_selection,country_selection)
 
 fig_ownership_change_country_dynamic = px.bar(ownership_change_country_dynamic_df, x = 'Country', y='cumulative_bp_change_of_ownership',
