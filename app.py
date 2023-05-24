@@ -169,10 +169,9 @@ st.write("Insert blurb about sector proportions over time.")
 
 region_prop_df = run_query('SQL/static/region/region_proportions.sql')
 
-region_prop_fig = px.line(region_prop_df, x="year", y="proportion", color="region", title="Proportion of Fund By Region Over Time", markers=True)
+region_prop_fig = px.line(region_prop_df, x="year", y="proportion", color="Region", title="Proportion of Fund By Region Over Time", markers=True)
 
 region_prop_fig.update_layout(title_x=0.3)
-
 region_prop_fig.update_xaxes(title_text='Year')
 region_prop_fig.update_yaxes(title_text='Proportion Of Fund (%)')
 
@@ -191,6 +190,18 @@ sector_ownership_fig.update_xaxes(title_text='Year')
 sector_ownership_fig.update_yaxes(title_text='Average Ownership (%)')
 
 st.plotly_chart(sector_ownership_fig, use_container_width=True)
+
+## Cumulative Change In Percent Ownership By Sector - Last 10 Years
+
+cum_owner_change_sector_10_df = run_query('SQL/static/sector/ownership_change_sector_ten_years.sql')
+
+cum_owner_change_sector_10_fig = px.bar(cum_owner_change_sector_10_df, x = 'Sector', y='cumulative_bp_change_of_ownership', title= "Cumulative Change In Average Ownership By Sector - Last 10 Years",
+                                              text_auto= True)
+
+cum_owner_change_sector_10_fig.update_layout(title_x=0.3)
+cum_owner_change_sector_10_fig.update_yaxes(title_text='Cumulative Change In Ownership (Basis Points)')
+
+st.plotly_chart(cum_owner_change_sector_10_fig, use_container_width=True)
 
 ## Cumulative Change In Percent Ownership and Market Value By Sector - Last 10 Years
 
