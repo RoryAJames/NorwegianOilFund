@@ -255,12 +255,10 @@ st.subheader("Part 3: Exploring Individual Countries")
 #List of countries in the database that is passed to multiselect 
 countries_df = run_query('SQL/static/distinct_countries.sql')
 
-## CUMULATIVE OWNERSHIP CHANGE USER SPECIFIED
-
 row1_col1, row1_col2 = st.columns([1,1])
 
 with row1_col1:
-    country_selection = st.multiselect('Select Countries Of Interest: ',countries_df, default=['Canada', 'United States'])
+    country_selection = st.multiselect('Select Countries Of Interest: ',countries_df, default=['Canada', 'United States','Mexico'])
     
 with row1_col2:
     year_selection = st.number_input('Select Number of Years', min_value= 0, max_value= 20, value= 1)
@@ -317,13 +315,40 @@ elif country_custom_selection == 'MSCI Emerging Markets':
 elif country_custom_selection == 'MSCI Latin America Countries':
     country_selection = country_selection + msci_latin_america
     
-#Send selection parameters to dynamic function
-        
-ownership_change_country_dynamic_df = run_query_dynamic_country('SQL/dynamic/ownership_change_country_multi_select.sql',year_selection,country_selection)
+## AVG OWNERSHIP MULTISELECT
 
-fig_ownership_change_country_dynamic = px.bar(ownership_change_country_dynamic_df, x = 'Country', y='cumulative_bp_change_of_ownership',
+avg_ownership_country_dynamic_df = run_query_dynamic_country('SQL/dynamic/avg_ownership_country_multiselect.sql',year_selection,country_selection)
+
+avg_ownership_country_dynamic_fig = px.line(avg_ownership_country_dynamic_df, x="year", y="avg_percent_ownership", color="Country", title=f"Average Ownership By Country Over {year_selection} Years", markers=True)
+
+avg_ownership_country_dynamic_fig.update_layout(title_x = 0.3, xaxis = dict(tickmode='array',tickvals = avg_ownership_country_dynamic_df['year'])) #Prevents plotly from adjusting the xaxis values.
+avg_ownership_country_dynamic_fig.update_xaxes(title_text='Year')
+avg_ownership_country_dynamic_fig.update_yaxes(title_text='Average Ownership (%)')
+
+st.plotly_chart(avg_ownership_country_dynamic_fig, use_container_width=True)
+
+## AVG OWNERSHIP CHANGE MULTISELECT
+        
+ownership_change_country_dynamic_df = run_query_dynamic_country('SQL/dynamic/ownership_change_country_multiselect.sql',year_selection,country_selection)
+
+fig_ownership_change_country_fig = px.bar(ownership_change_country_dynamic_df, x = 'Country', y='cumulative_bp_change_of_ownership', title = f"Cumulative Ownership Change By Country Over {year_selection} Years",
                                               text_auto= True)
 
-fig_ownership_change_country_dynamic.update_yaxes(title_text='Cumulative Change In Ownership (Basis Points)')
+fig_ownership_change_country_fig.update_layout(title_x = 0.3)
 
-st.plotly_chart(fig_ownership_change_country_dynamic, use_container_width=True)
+fig_ownership_change_country_fig.update_yaxes(title_text='Cumulative Change In Ownership (Basis Points)')
+
+st.plotly_chart(fig_ownership_change_country_fig, use_container_width=True)
+
+## TOP 10 COMPANIES BY CUMULATIVE OWNERSHIP CHANGE MULTISELECT
+
+top10_ownership_change_country_dynamic_df = run_query_dynamic_country('SQL/dynamic/top10_ownership_change_company_multiselect.sql',year_selection,country_selection)
+
+top10_ownership_change_country_fig = px.bar(top10_ownership_change_country_dynamic_df, x = 'Company', y='cumulative_bp_change_of_ownership', title = f"Top 10 Companies By Cumulative Ownership Change - Last {year_selection} Years",
+                                              text_auto= True)
+
+top10_ownership_change_country_fig.update_layout(title_x = 0.3)
+
+top10_ownership_change_country_fig.update_yaxes(title_text='Cumulative Change In Ownership (Basis Points)')
+
+st.plotly_chart(top10_ownership_change_country_fig, use_container_width=True)
